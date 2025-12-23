@@ -89,10 +89,13 @@ $(CHROMOSOME_LIST): $(INPUT_FILE)
 # Pattern rule for extracting sequences for each chromosome
 $(PIPELINE_DIR)/sequences_%.zarr: $(INPUT_FILE) | $(CHROMOSOME_LIST)
 	@mkdir -p $(PIPELINE_DIR)
+	# Get the actual chromosome ID from the target name
+	chr_id=$(notdir $(basename $@)); \
+	chr_id=$${chr_id#sequences_}; \
 	python scripts/extract.py extract_fasta_file \
 	  --species-id $(SPECIES_ID) \
 	  --fasta-file $(INPUT_FILE) \
-	  --chrom-map "$*:$(filter $*,$(CHROM_IDS))" \
+	  --chrom-map "$$chr_id:$$chr_id" \
 	  --tokenizer-path $(BASE_MODEL_PATH) \
 	  --output $@
 
