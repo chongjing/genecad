@@ -891,10 +891,14 @@ def export_gff(args: Args):
     intervals_dataset: xr.Dataset = predictions["/intervals"].ds
 
     # Extract chromosome ID from attributes (assuming it was saved during inference)
-    if "chromosome_id" not in intervals_dataset.attrs:
-        raise ValueError("Cannot find 'chromosome_id' attribute in /intervals dataset.")
-    chrom_id = intervals_dataset.attrs["chromosome_id"]
-    logger.info(f"Loaded intervals for chromosome: {chrom_id}")
+    #if "chromosome_id" not in intervals_dataset.attrs:
+    #    raise ValueError("Cannot find 'chromosome_id' attribute in /intervals dataset.")
+    #chrom_id = intervals_dataset.attrs["chromosome_id"]
+    #logger.info(f"Loaded intervals for chromosome: {chrom_id}")
+
+    # Use chromosome ID from command line argument instead of dataset attributes
+    chrom_id = args.chromosome_id
+    logger.info(f"Using chromosome ID from command line: {chrom_id}")
 
     logger.info("Converting interval predictions to DataFrame")
     intervals_table = intervals_dataset.to_dataframe().reset_index()
@@ -1046,6 +1050,11 @@ def main():
         "--input", required=True, help="Path to input zarr dataset from run_inference"
     )
     gff_parser.add_argument("--output", required=True, help="Path to output GFF file")
+    gff_parser.add_argument(
+    "--chromosome-id", 
+    required=True, 
+    help="Chromosome identifier for gene naming and GFF output"
+    )
     gff_parser.add_argument(
         "--min-transcript-length",
         type=int,

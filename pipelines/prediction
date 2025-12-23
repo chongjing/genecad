@@ -64,7 +64,7 @@ help:
 	@echo ""
 	@echo "Optional variables:"
 	@echo "  REQUIRE_UTRS - Require UTRs in final output (default: yes)"
-        @echo "  HEAD_MODEL_PATH - Path to GeneCAD model checkpoint"
+	@echo "  HEAD_MODEL_PATH - Path to GeneCAD model checkpoint"
 	@echo "  BASE_MODEL_PATH - Path to PlantCAD model checkpoint (default: kuleshov-group/PlantCAD2-Small-l24-d0768)"
 	@echo "  LAUNCHER - Command launcher for GPU jobs (default: python)"
 	@echo "  PRED_BATCH_SIZE - Batch size for prediction (default: 32)"
