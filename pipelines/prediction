@@ -49,7 +49,7 @@ extract_chromosomes: $(CHROMOSOME_LIST)
 help:
 	@echo "Available targets:"
 	@echo "  all - Run complete prediction pipeline"
-i	@echo "  extract_chromosomes - Extract chromosome headers from FASTA"
+	@echo "  extract_chromosomes - Extract chromosome headers from FASTA"
 	@echo "  sequences - Extract sequences only"
 	@echo "  predictions - Generate predictions only"
 	@echo "  annotations - Run complete pipeline (alias for all)"
