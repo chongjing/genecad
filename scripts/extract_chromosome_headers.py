@@ -12,7 +12,7 @@ def extract_and_clean_headers(fasta_file):
     # Extract headers from FASTA
     for record in SeqIO.parse(fasta_file, "fasta"):
         # Get header without '>' and take only characters before first space
-        header = record.id.split()[0].replace('.', '_')
+        header = record.id.split()[0]
         headers.append(header)
     
     # Handle duplicates by appending _1, _2, _3...
