@@ -2,6 +2,7 @@ import argparse
 import logging
 import os
 import tqdm
+import re
 from typing import Literal, Any
 from numpy import typing as npt
 from pydantic import BaseModel, Field, field_validator, ValidationInfo
@@ -27,6 +28,9 @@ import torch._dynamo
 
 logger = logging.getLogger(__name__)
 
+def clean_chromosome_id(chrom_id: str) -> str:
+    """Clean chromosome ID to be GFF-compatible by replacing invalid characters."""
+    return re.sub(r'[^a-zA-Z0-9_]', '_', chrom_id)
 
 def batched(input_list: list[Any], batch_size: int) -> list[list[Any]]:
     """Batches a list into sublists of a specified size."""
@@ -766,6 +770,9 @@ def generate_gff(
         "transcript",
     }
 
+    # Clean chromosome ID for GFF compatibility
+    clean_chrom_id = clean_chromosome_id(chrom_id)
+
     for gene_group in genes:
         # Validate entity names
         invalid_entities = set(gene_group["entity_name"].unique()) - valid_entity_names
@@ -803,7 +810,8 @@ def generate_gff(
             gene_group_filtered = gene_group.copy()
 
         gene_counter += 1
-        gene_id = f"gene_{gene_counter}"
+        # MODIFIED: Include chromosome ID in gene ID
+        gene_id = f"{clean_chrom_id}_gene_{gene_counter}"
         rna_id = f"{gene_id}.t1"
 
         gene_start = int(gene_group_filtered["start"].min())
