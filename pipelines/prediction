@@ -70,17 +70,8 @@ $(shell cat $(CHROMOSOME_LIST) 2>/dev/null | tr '\n' ' ' | sed 's/ $$//')
 endef
 
 # Helper function to check if GFF file has data (non-empty and contains feature records)
-define check_gff_has_data
-	@if [ ! -f $(1) ]; then \
-		echo "File $(1) does not exist"; \
-		exit 1; \
-	elif [ ! -s $(1) ]; then \
-		echo "File $(1) is empty"; \
-		exit 1; \
-	elif ! grep -q "^[^#]" $(1); then \
-		echo "File $(1) has no feature records (only comments/headers)"; \
-		exit 1; \
-	fi
+define check_gff_has_data_shell
+[ -f "$1" ] && [ -s "$1" ] && grep -q "^[^#]" "$1"
 endef
 
 # Pattern rule for extracting sequences for each chromosome
@@ -134,44 +125,44 @@ $(PIPELINE_DIR)/predictions__raw_%.gff: $(PIPELINE_DIR)/intervals_%.zarr
 # Pattern rule for filtering by feature length for each chromosome - with skip logic
 $(PIPELINE_DIR)/predictions__raw__feat_len_2_%.gff: $(PIPELINE_DIR)/predictions__raw_%.gff
 	@echo "Checking if $< has data for chromosome $*..."
-	@if $(call check_gff_has_data,$<); then \
-		echo "Processing feature length filtering for chromosome $*"; \
-		python scripts/gff.py filter_to_min_feature_length \
-		  --input $< \
-		  --output $@ \
-		  --feature-types "five_prime_UTR,three_prime_UTR,CDS" \
-		  --min-length 2; \
+	if $(call check_gff_has_data_shell,$<); then \
+	echo "Processing feature length filtering for chromosome $*"; \
+	python scripts/gff.py filter_to_min_feature_length \
+		--input $< \
+		--output $@ \
+		--feature-types "five_prime_UTR,three_prime_UTR,CDS" \
+		--min-length 2; \
 	else \
-		echo "Skipping feature length filtering for chromosome $* - no valid transcripts found"; \
-		touch $@; \
+	echo "Skipping feature length filtering for chromosome $* - no valid transcripts found"; \
+	touch $@; \
 	fi
 
 # Pattern rule for filtering by gene length for each chromosome - with skip logic
 $(PIPELINE_DIR)/predictions__raw__feat_len_2__gene_len_30_%.gff: $(PIPELINE_DIR)/predictions__raw__feat_len_2_%.gff
 	@echo "Checking if $< has data for chromosome $*..."
-	@if $(call check_gff_has_data,$<); then \
-		echo "Processing gene length filtering for chromosome $*"; \
-		python scripts/gff.py filter_to_min_gene_length \
-		  --input $< \
-		  --output $@ \
-		  --min-length 30; \
+	@if $(call check_gff_has_data_shell,$<); then \
+	echo "Processing gene length filtering for chromosome $*"; \
+	python scripts/gff.py filter_to_min_gene_length \
+		--input "$<" \
+		--output "$@" \
+		--min-length 30; \
 	else \
-		echo "Skipping gene length filtering for chromosome $* - no valid transcripts found"; \
-		touch $@; \
+	echo "Skipping gene length filtering for chromosome $* - likely no valid transcripts after previous steps"; \
+	touch "$@"; \
 	fi
 
 # Pattern rule for filtering to valid genes for each chromosome - with skip logic
 $(PIPELINE_DIR)/predictions__raw__feat_len_2__gene_len_30__has_req_feats_%.gff: $(PIPELINE_DIR)/predictions__raw__feat_len_2__gene_len_30_%.gff
 	@echo "Checking if $< has data for chromosome $*..."
-	@if $(call check_gff_has_data,$<); then \
-		echo "Processing valid gene filtering for chromosome $*"; \
-		python scripts/gff.py filter_to_valid_genes \
-		  --input $< \
-		  --output $@ \
-		  --require-utrs $(REQUIRE_UTRS); \
+	@if $(call check_gff_has_data_shell,$<); then \
+	echo "Processing valid gene filtering for chromosome $*"; \
+	python scripts/gff.py filter_to_valid_genes \
+		--input "$<" \
+		--output "$@" \
+		--require-utrs "$(REQUIRE_UTRS)"; \
 	else \
-		echo "Skipping valid gene filtering for chromosome $* - no valid transcripts found"; \
-		touch $@; \
+	echo "Skipping valid gene filtering for chromosome $* - likely no valid transcripts after previous steps"; \
+	touch "$@"; \
 	fi
 
 # Target to build all chromosome-specific files
